@@ -1,6 +1,3 @@
-const nock = require('nock');
-const { BASE_URL, OAUTH_URL } = require('../constants');
-
 const mockChannels = [
   { id: 'general', label: 'General' },
   { id: 'revenue', label: 'Revenue' },
@@ -15,13 +12,13 @@ const mockEventResponse = {
 
 const mockEvents = [
   {
+    id: 'abc123',
     event: 'user.purchase',
     title: 'User Subscribed',
     message: 'John just made his first purchase',
     channel: 'revenue',
     link: 'https://app.apialerts.com',
     tags: ['revenue', 'growth'],
-    data: { key: 'value' },
   },
 ];
 
@@ -30,26 +27,21 @@ const mockOAuthMe = {
   workspaceName: 'My Workspace',
 };
 
-const mockAccessToken = {
-  access_token: 'mock_access_token',
-  refresh_token: 'mock_refresh_token',
-  token_type: 'Bearer',
-  expires_in: 3600,
-};
+const createMockZ = (responseStatus, responseBody) => {
+  const mockResponse = {
+    status: responseStatus,
+    content: JSON.stringify(responseBody),
+    throwForStatus: function () {
+      if (this.status >= 400) {
+        throw new Error(`Response status ${this.status}`);
+      }
+    },
+  };
 
-const authBundle = {
-  authData: {
-    access_token: 'mock_access_token',
-    refresh_token: 'mock_refresh_token',
-  },
-};
-
-const nockApi = () => nock(BASE_URL);
-const nockOAuth = () => nock(OAUTH_URL);
-
-const cleanNock = () => {
-  nock.cleanAll();
-  nock.enableNetConnect();
+  return {
+    request: jest.fn().mockResolvedValue(mockResponse),
+    JSON: JSON,
+  };
 };
 
 module.exports = {
@@ -57,9 +49,5 @@ module.exports = {
   mockEventResponse,
   mockEvents,
   mockOAuthMe,
-  mockAccessToken,
-  authBundle,
-  nockApi,
-  nockOAuth,
-  cleanNock,
+  createMockZ,
 };

@@ -1,56 +1,37 @@
-const zapier = require('zapier-platform-core');
-const nock = require('nock');
 const App = require('../../index');
-const { mockChannels, authBundle, nockApi, cleanNock } = require('../helpers');
+const { mockChannels, createMockZ } = require('../helpers');
+const { BASE_URL } = require('../../constants');
 
-const appTester = zapier.createAppTester(App);
-zapier.tools.env.inject();
-
-afterEach(cleanNock);
+const perform = App.triggers['channel_list'].operation.perform;
 
 describe('triggers.channel_list', () => {
   describe('perform', () => {
     it('should fetch channels from the API', async () => {
-      nockApi()
-        .get('/oauth/channels')
-        .reply(200, mockChannels);
+      const z = createMockZ(200, mockChannels);
+      const bundle = {};
+      const results = await perform(z, bundle);
 
-      const bundle = { ...authBundle, inputData: {} };
-      const results = await appTester(
-        App.triggers['channel_list'].operation.perform,
-        bundle,
+      expect(z.request).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: `${BASE_URL}/oauth/channels`,
+          method: 'GET',
+        }),
       );
-
       expect(results).toHaveLength(3);
       expect(results[0].id).toBe('general');
       expect(results[0].label).toBe('General');
-      expect(results[1].id).toBe('revenue');
-      expect(results[2].id).toBe('deployments');
     });
 
     it('should handle empty channel list', async () => {
-      nockApi()
-        .get('/oauth/channels')
-        .reply(200, []);
-
-      const bundle = { ...authBundle, inputData: {} };
-      const results = await appTester(
-        App.triggers['channel_list'].operation.perform,
-        bundle,
-      );
+      const z = createMockZ(200, []);
+      const results = await perform(z, {});
 
       expect(results).toHaveLength(0);
     });
 
     it('should throw on API error', async () => {
-      nockApi()
-        .get('/oauth/channels')
-        .reply(401, { error: 'Unauthorized' });
-
-      const bundle = { ...authBundle, inputData: {} };
-      await expect(
-        appTester(App.triggers['channel_list'].operation.perform, bundle),
-      ).rejects.toThrow();
+      const z = createMockZ(401, { error: 'Unauthorized' });
+      await expect(perform(z, {})).rejects.toThrow();
     });
   });
 

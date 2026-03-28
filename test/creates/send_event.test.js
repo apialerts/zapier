@@ -1,36 +1,23 @@
-const zapier = require('zapier-platform-core');
-const nock = require('nock');
 const App = require('../../index');
-const { mockEventResponse, authBundle, nockApi, cleanNock } = require('../helpers');
-const { INTEGRATION, VERSION } = require('../../constants');
+const { mockEventResponse, createMockZ } = require('../helpers');
+const { BASE_URL, INTEGRATION, VERSION } = require('../../constants');
 
-const appTester = zapier.createAppTester(App);
-zapier.tools.env.inject();
-
-afterEach(cleanNock);
+const perform = App.creates['send_event'].operation.perform;
 
 describe('creates.send_event', () => {
   describe('perform', () => {
     it('should send an event with only a message', async () => {
-      nockApi()
-        .post('/oauth/event', (body) => {
-          expect(body.message).toBe('Deploy complete');
-          expect(body.channel).toBeNull();
-          expect(body.event).toBeNull();
-          expect(body.tags).toBeNull();
-          return true;
-        })
-        .reply(200, mockEventResponse);
+      const z = createMockZ(200, mockEventResponse);
+      const bundle = { inputData: { message: 'Deploy complete' } };
+      const result = await perform(z, bundle);
 
-      const bundle = {
-        ...authBundle,
-        inputData: { message: 'Deploy complete' },
-      };
+      const call = z.request.mock.calls[0][0];
+      const body = JSON.parse(call.body);
 
-      const result = await appTester(
-        App.creates['send_event'].operation.perform,
-        bundle,
-      );
+      expect(body.message).toBe('Deploy complete');
+      expect(body.channel).toBeNull();
+      expect(body.event).toBeNull();
+      expect(body.tags).toBeNull();
 
       expect(result.workspace).toBe('My Workspace');
       expect(result.channel).toBe('General');
@@ -38,21 +25,8 @@ describe('creates.send_event', () => {
     });
 
     it('should send an event with all fields', async () => {
-      nockApi()
-        .post('/oauth/event', (body) => {
-          expect(body.message).toBe('New user signed up');
-          expect(body.channel).toBe('signups');
-          expect(body.event).toBe('user.signup');
-          expect(body.title).toBe('New User');
-          expect(body.link).toBe('https://example.com');
-          expect(body.tags).toEqual(['growth', 'organic']);
-          expect(body.data).toEqual({ source: 'web' });
-          return true;
-        })
-        .reply(200, mockEventResponse);
-
+      const z = createMockZ(200, mockEventResponse);
       const bundle = {
-        ...authBundle,
         inputData: {
           message: 'New user signed up',
           channel: 'signups',
@@ -63,74 +37,55 @@ describe('creates.send_event', () => {
           data: { source: 'web' },
         },
       };
+      const result = await perform(z, bundle);
 
-      const result = await appTester(
-        App.creates['send_event'].operation.perform,
-        bundle,
-      );
+      const call = z.request.mock.calls[0][0];
+      const body = JSON.parse(call.body);
+
+      expect(body.message).toBe('New user signed up');
+      expect(body.channel).toBe('signups');
+      expect(body.event).toBe('user.signup');
+      expect(body.title).toBe('New User');
+      expect(body.link).toBe('https://example.com');
+      expect(body.tags).toEqual(['growth', 'organic']);
+      expect(body.data).toEqual({ source: 'web' });
 
       expect(result.workspace).toBe('My Workspace');
     });
 
-    it('should send correct headers', async () => {
-      nockApi()
-        .post('/oauth/event')
-        .reply(function () {
-          expect(this.req.headers['x-integration']).toContain(INTEGRATION);
-          expect(this.req.headers['x-version']).toContain(VERSION);
-          expect(this.req.headers['content-type']).toContain('application/json');
-          return [200, mockEventResponse];
-        });
+    it('should send correct URL and headers', async () => {
+      const z = createMockZ(200, mockEventResponse);
+      const bundle = { inputData: { message: 'Test' } };
+      await perform(z, bundle);
 
-      const bundle = {
-        ...authBundle,
-        inputData: { message: 'Test' },
-      };
-
-      await appTester(
-        App.creates['send_event'].operation.perform,
-        bundle,
-      );
+      const call = z.request.mock.calls[0][0];
+      expect(call.url).toBe(`${BASE_URL}/oauth/event`);
+      expect(call.method).toBe('POST');
+      expect(call.headers['X-Integration']).toBe(INTEGRATION);
+      expect(call.headers['X-Version']).toBe(VERSION);
+      expect(call.headers['Content-Type']).toBe('application/json');
     });
 
     it('should trim whitespace from string fields', async () => {
-      nockApi()
-        .post('/oauth/event', (body) => {
-          expect(body.message).toBe('Hello');
-          expect(body.channel).toBe('dev');
-          expect(body.title).toBe('Title');
-          return true;
-        })
-        .reply(200, mockEventResponse);
-
+      const z = createMockZ(200, mockEventResponse);
       const bundle = {
-        ...authBundle,
         inputData: {
           message: '  Hello  ',
           channel: '  dev  ',
           title: '  Title  ',
         },
       };
+      await perform(z, bundle);
 
-      await appTester(
-        App.creates['send_event'].operation.perform,
-        bundle,
-      );
+      const body = JSON.parse(z.request.mock.calls[0][0].body);
+      expect(body.message).toBe('Hello');
+      expect(body.channel).toBe('dev');
+      expect(body.title).toBe('Title');
     });
 
     it('should treat empty strings as null', async () => {
-      nockApi()
-        .post('/oauth/event', (body) => {
-          expect(body.channel).toBeNull();
-          expect(body.event).toBeNull();
-          expect(body.title).toBeNull();
-          expect(body.link).toBeNull();
-          return true;
-        })
-        .reply(200, mockEventResponse);
-
+      const z = createMockZ(200, mockEventResponse);
       const bundle = {
-        ...authBundle,
         inputData: {
           message: 'Hello',
           channel: '   ',
@@ -139,89 +94,61 @@ describe('creates.send_event', () => {
           link: '  ',
         },
       };
+      await perform(z, bundle);
 
-      await appTester(
-        App.creates['send_event'].operation.perform,
-        bundle,
-      );
+      const body = JSON.parse(z.request.mock.calls[0][0].body);
+      expect(body.channel).toBeNull();
+      expect(body.event).toBeNull();
+      expect(body.title).toBeNull();
+      expect(body.link).toBeNull();
     });
 
     it('should parse comma-separated tags string', async () => {
-      nockApi()
-        .post('/oauth/event', (body) => {
-          expect(body.tags).toEqual(['deploy', 'prod', 'v2']);
-          return true;
-        })
-        .reply(200, mockEventResponse);
-
+      const z = createMockZ(200, mockEventResponse);
       const bundle = {
-        ...authBundle,
-        inputData: {
-          message: 'Deploy',
-          tags: 'deploy, prod, v2',
-        },
+        inputData: { message: 'Deploy', tags: 'deploy, prod, v2' },
       };
+      await perform(z, bundle);
 
-      await appTester(
-        App.creates['send_event'].operation.perform,
-        bundle,
-      );
+      const body = JSON.parse(z.request.mock.calls[0][0].body);
+      expect(body.tags).toEqual(['deploy', 'prod', 'v2']);
+    });
+
+    it('should handle tags as array', async () => {
+      const z = createMockZ(200, mockEventResponse);
+      const bundle = {
+        inputData: { message: 'Deploy', tags: ['deploy', 'prod'] },
+      };
+      await perform(z, bundle);
+
+      const body = JSON.parse(z.request.mock.calls[0][0].body);
+      expect(body.tags).toEqual(['deploy', 'prod']);
     });
 
     it('should handle empty data object as null', async () => {
-      nockApi()
-        .post('/oauth/event', (body) => {
-          expect(body.data).toBeNull();
-          return true;
-        })
-        .reply(200, mockEventResponse);
-
+      const z = createMockZ(200, mockEventResponse);
       const bundle = {
-        ...authBundle,
-        inputData: {
-          message: 'Hello',
-          data: {},
-        },
+        inputData: { message: 'Hello', data: {} },
       };
+      await perform(z, bundle);
 
-      await appTester(
-        App.creates['send_event'].operation.perform,
-        bundle,
-      );
+      const body = JSON.parse(z.request.mock.calls[0][0].body);
+      expect(body.data).toBeNull();
     });
 
     it('should default message to fallback when empty', async () => {
-      nockApi()
-        .post('/oauth/event', (body) => {
-          expect(body.message).toBe('No message provided');
-          return true;
-        })
-        .reply(200, mockEventResponse);
+      const z = createMockZ(200, mockEventResponse);
+      const bundle = { inputData: { message: '   ' } };
+      await perform(z, bundle);
 
-      const bundle = {
-        ...authBundle,
-        inputData: { message: '   ' },
-      };
-
-      await appTester(
-        App.creates['send_event'].operation.perform,
-        bundle,
-      );
+      const body = JSON.parse(z.request.mock.calls[0][0].body);
+      expect(body.message).toBe('No message provided');
     });
 
     it('should throw on API error', async () => {
-      nockApi()
-        .post('/oauth/event')
-        .reply(400, { error: 'Bad request' });
-
-      const bundle = {
-        ...authBundle,
-        inputData: { message: 'Test' },
-      };
-
-      await expect(
-        appTester(App.creates['send_event'].operation.perform, bundle),
-      ).rejects.toThrow();
+      const z = createMockZ(400, { error: 'Bad request' });
+      const bundle = { inputData: { message: 'Test' } };
+      await expect(perform(z, bundle)).rejects.toThrow();
     });
   });
 
