@@ -1,5 +1,5 @@
-const BASE_URL = 'https://api.apialerts.dev';
-const OAUTH_URL = 'https://oauth.apialerts.dev';
+const BASE_URL = 'https://api.apialerts.com';
+const OAUTH_URL = 'https://oauth.apialerts.com';
 const INTEGRATION = 'zapier';
 const VERSION = require('./package.json').version;
 
