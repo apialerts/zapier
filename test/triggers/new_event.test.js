@@ -90,7 +90,7 @@ describe('triggers.new_event', () => {
     it('should have output fields matching live payload', () => {
       const fields = App.triggers['new_event'].operation.outputFields;
       const keys = fields.map((f) => f.key);
-      expect(keys).toEqual(['id', 'event', 'title', 'message', 'channel', 'link', 'tags', 'data', 'createdAt']);
+      expect(keys).toEqual(['id', 'event', 'title', 'message', 'channel', 'link', 'tags', 'data', 'created']);
     });
   });
 });

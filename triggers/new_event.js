@@ -39,7 +39,7 @@ module.exports = {
       link: 'https://app.apialerts.com',
       tags: ['revenue', 'growth'],
       data: { key: 'value' },
-      createdAt: '2026-03-28T00:00:00Z',
+      created: '2026-03-28T00:00:00Z',
     },
     outputFields: [
       { key: 'id', label: 'Event ID' },
@@ -50,7 +50,7 @@ module.exports = {
       { key: 'link', label: 'Link' },
       { key: 'tags', label: 'Tags', type: 'string', list: true },
       { key: 'data', label: 'Custom Data', type: 'string', dict: true },
-      { key: 'createdAt', label: 'Created At', type: 'datetime' },
+      { key: 'created', label: 'Created', type: 'datetime' },
     ],
   },
   display: {
