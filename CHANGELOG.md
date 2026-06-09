@@ -1,17 +1,21 @@
-## 3.0.0
+# Changelog
 
-First public release of the rebuilt API Alerts Zapier app. Rewritten from the ground up on the Zapier CLI platform.
+## 3.0.2
 
-1. New action! create/send_event — post events from any Zap into API Alerts
-2. New trigger! trigger/new_event — fires when matching events arrive in your workspace
-3. New trigger! trigger/channel_list — dynamic dropdown of your workspace's channels
+API Alerts rebuilt on the Zapier CLI platform. OAuth2 sign-in tied to your API Alerts workspace.
 
-OAuth2 sign-in tied to your API Alerts workspace.
+1. New trigger! trigger/new_event - fires when a matching event arrives in your workspace. Optional Channel and Event Pattern filters scope which events start your Zap (Event Pattern accepts glob syntax, e.g. `user.*`).
+2. New trigger! trigger/channel_list - dynamic dropdown of your workspace's channels, used to populate the Channel filter.
+3. New action! create/send_event - post an event into API Alerts from any Zap.
+
+## 3.0.1
+
+Initial rebuild of the integration on the Zapier CLI platform.
 
 ## 2.0.0
 
-Upgraded secondary release.
+Added workspace support via channels. Built on Zapier's legacy web builder, API key authentication.
 
 ## 1.0.0
 
-Initial release to public.
+Initial release: a single trigger using API key authentication. Built on Zapier's legacy web builder.

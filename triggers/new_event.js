@@ -7,10 +7,31 @@ const perform = async (z, bundle) => {
 module.exports = {
   operation: {
     perform: perform,
-    inputFields: [],
+    inputFields: [
+      {
+        key: 'channelFilter',
+        label: 'Channel',
+        helpText: 'Only trigger for events in this channel. Leave empty to trigger for all channels.',
+        type: 'string',
+        required: false,
+        dynamic: 'channel_list.id.label',
+      },
+      {
+        key: 'glob',
+        label: 'Event Pattern',
+        helpText: 'Glob pattern to filter events. Examples: * (all events), user.* (all user events), user.purchase (exact match). Leave empty to trigger for all events.',
+        type: 'string',
+        required: false,
+        placeholder: 'user.*',
+      },
+    ],
     type: 'hook',
     performSubscribe: {
-      body: { hookUrl: '{{bundle.targetUrl}}' },
+      body: {
+        hookUrl: '{{bundle.targetUrl}}',
+        channelFilter: '{{bundle.inputData.channelFilter}}',
+        glob: '{{bundle.inputData.glob}}',
+      },
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
