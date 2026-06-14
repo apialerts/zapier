@@ -5,7 +5,7 @@ Maintainer-only workflow for shipping a new version of the API Alerts Zapier app
 ## Prerequisites
 
 - Zapier Platform CLI installed and logged in: `npm install -g zapier-platform-cli && zapier login`
-- `CLIENT_ID` / `CLIENT_SECRET` for the prod OAuth client (from 1Password)
+- `CLIENT_ID` / `CLIENT_SECRET` for the prod OAuth client
 - Write access to the `api-alerts` app on Zapier
 
 ## Release workflow
@@ -23,9 +23,9 @@ npm test
 
 Pick the next semver bump based on the change:
 
-- `patch` — bug fix, no behavior change visible to users
-- `minor` — new trigger / action, backwards compatible
-- `major` — breaking change to an existing trigger / action (forces user re-setup)
+- `patch`: bug fix, no behavior change visible to users
+- `minor`: new trigger / action, backwards compatible
+- `major`: breaking change to an existing trigger / action (forces user re-setup)
 
 ```bash
 npm version <patch|minor|major>
@@ -51,10 +51,10 @@ This uploads the current tree to the Zapier platform under the version in `packa
 Only required on a brand-new version (re-pushes inherit env from the prior version, but it's cheap to re-run):
 
 ```bash
-zapier-platform env:set <version> CLIENT_ID=<from 1Password> CLIENT_SECRET=<from 1Password>
+zapier-platform env:set <version> CLIENT_ID=<client-id> CLIENT_SECRET=<client-secret>
 ```
 
-Never put `ACCESS_TOKEN` / `REFRESH_TOKEN` on the Zapier env — those are per-user and stored by Zapier internally after each user's OAuth flow.
+Never put `ACCESS_TOKEN` / `REFRESH_TOKEN` on the Zapier env: those are per-user and stored by Zapier internally after each user's OAuth flow.
 
 ### 5. Smoke test the new version
 
@@ -76,7 +76,7 @@ If the change is non-breaking and you want everyone moved over:
 zapier-platform migrate <old version> <new version>
 ```
 
-Migration is asynchronous and happens in batches. For breaking changes (major bumps), don't migrate — let users opt in by re-creating their Zap, which is how Zapier surfaces the upgrade prompt.
+Migration is asynchronous and happens in batches. For breaking changes (major bumps), don't migrate: let users opt in by re-creating their Zap, which is how Zapier surfaces the upgrade prompt.
 
 ### 8. Verify in production
 
