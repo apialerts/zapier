@@ -1,7 +1,9 @@
 const App = require('../../index');
 const { BASE_URL } = require('../../constants');
+const { createMockZ } = require('../helpers');
 
 const perform = App.triggers['new_event'].operation.perform;
+const subscribe = App.triggers['new_event'].operation.performSubscribe;
 
 describe('triggers.new_event', () => {
   describe('perform', () => {
@@ -47,11 +49,37 @@ describe('triggers.new_event', () => {
   });
 
   describe('subscribe/unsubscribe', () => {
-    it('should POST to /oauth/hooks for subscribe', () => {
-      const sub = App.triggers['new_event'].operation.performSubscribe;
-      expect(sub.method).toBe('POST');
-      expect(sub.url).toBe(`${BASE_URL}/oauth/hooks`);
-      expect(sub.body.hookUrl).toBe('{{bundle.targetUrl}}');
+    it('should POST to /oauth/hooks with the hook url and filters', async () => {
+      const z = createMockZ(200, { id: 'hook_1' });
+      const bundle = {
+        targetUrl: 'https://hooks.zapier.com/abc',
+        inputData: { channelFilter: 'revenue', glob: 'user.*' },
+      };
+
+      const result = await subscribe(z, bundle);
+
+      const req = z.request.mock.calls[0][0];
+      expect(req.method).toBe('POST');
+      expect(req.url).toBe(`${BASE_URL}/oauth/hooks`);
+      const body = JSON.parse(req.body);
+      expect(body.hookUrl).toBe('https://hooks.zapier.com/abc');
+      expect(body.channelFilter).toBe('revenue');
+      expect(body.glob).toBe('user.*');
+      expect(result.id).toBe('hook_1');
+    });
+
+    it('should send null filters when blank so the backend matches all events', async () => {
+      const z = createMockZ(200, { id: 'hook_2' });
+      const bundle = {
+        targetUrl: 'https://hooks.zapier.com/abc',
+        inputData: { channelFilter: '', glob: '   ' },
+      };
+
+      await subscribe(z, bundle);
+
+      const body = JSON.parse(z.request.mock.calls[0][0].body);
+      expect(body.channelFilter).toBeNull();
+      expect(body.glob).toBeNull();
     });
 
     it('should DELETE to /oauth/hooks/{id} for unsubscribe', () => {

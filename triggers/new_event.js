@@ -4,6 +4,29 @@ const perform = async (z, bundle) => {
   return [bundle.cleanedRequest];
 };
 
+// Send blank filters as null so the backend treats them as "no filter".
+// An empty string would otherwise be stored verbatim and match no events.
+const cleanString = (value) =>
+  typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
+
+const subscribe = async (z, bundle) => {
+  const response = await z.request({
+    url: `${BASE_URL}/oauth/hooks`,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: z.JSON.stringify({
+      hookUrl: bundle.targetUrl,
+      channelFilter: cleanString(bundle.inputData.channelFilter),
+      glob: cleanString(bundle.inputData.glob),
+    }),
+  });
+  response.throwForStatus();
+  return z.JSON.parse(response.content);
+};
+
 module.exports = {
   operation: {
     perform: perform,
@@ -11,7 +34,7 @@ module.exports = {
       {
         key: 'channelFilter',
         label: 'Channel',
-        helpText: 'Only trigger for events in this channel. Leave empty to trigger for all channels.',
+        helpText: 'Optional. Leave blank for all channels, or pick one to only trigger on its events.',
         type: 'string',
         required: false,
         dynamic: 'channel_list.id.label',
@@ -19,26 +42,14 @@ module.exports = {
       {
         key: 'glob',
         label: 'Event Pattern',
-        helpText: 'Glob pattern to filter events. Examples: * (all events), user.* (all user events), user.purchase (exact match). Leave empty to trigger for all events.',
+        helpText: 'Optional. Leave blank for all events, or enter a glob pattern to match event keys (e.g. user.* matches user.signup and user.purchase).',
         type: 'string',
         required: false,
         placeholder: 'user.*',
       },
     ],
     type: 'hook',
-    performSubscribe: {
-      body: {
-        hookUrl: '{{bundle.targetUrl}}',
-        channelFilter: '{{bundle.inputData.channelFilter}}',
-        glob: '{{bundle.inputData.glob}}',
-      },
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      method: 'POST',
-      url: `${BASE_URL}/oauth/hooks`,
-    },
+    performSubscribe: subscribe,
     performUnsubscribe: {
       headers: {
         'Content-Type': 'application/json',

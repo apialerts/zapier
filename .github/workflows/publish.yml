@@ -1,0 +1,66 @@
+name: Publish
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  publish:
+    name: Push to Zapier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check package.json version matches git tag
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./package.json').version")
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::tag v$TAG does not match package.json version=$PKG"
+            exit 1
+          fi
+
+      - name: Test
+        run: npm test
+
+      - name: Validate
+        run: npx zapier validate
+        env:
+          ZAPIER_DEPLOY_KEY: ${{ secrets.ZAPIER_DEPLOY_KEY }}
+
+      - name: Push to Zapier
+        run: npx zapier push
+        env:
+          ZAPIER_DEPLOY_KEY: ${{ secrets.ZAPIER_DEPLOY_KEY }}
+
+      # Env vars are per-version on Zapier and are not guaranteed to carry over
+      # to a freshly pushed version. Set them so OAuth works on the new version.
+      - name: Set integration env vars
+        run: |
+          npx zapier env:set "${GITHUB_REF_NAME#v}" \
+            CLIENT_ID="${{ secrets.ZAPIER_CLIENT_ID }}" \
+            CLIENT_SECRET="${{ secrets.ZAPIER_CLIENT_SECRET }}"
+        env:
+          ZAPIER_DEPLOY_KEY: ${{ secrets.ZAPIER_DEPLOY_KEY }}
+
+  notify:
+    name: Send Publish Alert
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: apialerts/notify-action@v2
+        with:
+          api_key: ${{ secrets.APIALERTS_API_KEY }}
+          event: ci.integration.publish.zapier
+          channel: releases
+          message: 'zapier ${{ github.ref_name }} pushed to Zapier'
+          tags: CI/CD,Zapier,Publish
+          link: ${{ format('{0}/{1}/releases/tag/{2}', github.server_url, github.repository, github.ref_name) }}

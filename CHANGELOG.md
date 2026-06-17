@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.3
+
+Fixes filtering on the New Event trigger.
+
+1. Blank Channel or Event Pattern filters are now sent as null so the trigger fires on all events, instead of matching nothing.
+2. Clearer help text on both filter fields.
+
 ## 3.0.2
 
 API Alerts rebuilt on the Zapier CLI platform. OAuth2 sign-in tied to your API Alerts workspace.
