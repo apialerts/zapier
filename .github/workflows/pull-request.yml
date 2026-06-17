@@ -18,7 +18,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - name: Validate
-        run: npx zapier validate
+        run: npx zapier-platform validate
         env:
           ZAPIER_DEPLOY_KEY: ${{ secrets.ZAPIER_DEPLOY_KEY }}
       - name: Send Build Alert

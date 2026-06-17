@@ -32,12 +32,12 @@ jobs:
         run: npm test
 
       - name: Validate
-        run: npx zapier validate
+        run: npx zapier-platform validate
         env:
           ZAPIER_DEPLOY_KEY: ${{ secrets.ZAPIER_DEPLOY_KEY }}
 
       - name: Push to Zapier
-        run: npx zapier push
+        run: npx zapier-platform push
         env:
           ZAPIER_DEPLOY_KEY: ${{ secrets.ZAPIER_DEPLOY_KEY }}
 
@@ -45,7 +45,7 @@ jobs:
       # to a freshly pushed version. Set them so OAuth works on the new version.
       - name: Set integration env vars
         run: |
-          npx zapier env:set "${GITHUB_REF_NAME#v}" \
+          npx zapier-platform env:set "${GITHUB_REF_NAME#v}" \
             CLIENT_ID="${{ secrets.ZAPIER_CLIENT_ID }}" \
             CLIENT_SECRET="${{ secrets.ZAPIER_CLIENT_SECRET }}"
         env:
