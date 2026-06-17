@@ -48,7 +48,7 @@ jobs:
           event: ci.integration.migrate.zapier
           channel: releases
           title: 'Migrated'
-          message: 'Zapier - users migrated ${{ inputs.from_version }} to ${{ inputs.to_version }}'
+          message: 'Zapier - Users migrated from ${{ inputs.from_version }} to ${{ inputs.to_version }}'
           tags: CI/CD,Zapier,Migrate
           link: ${{ format('{0}/{1}', github.server_url, github.repository) }}
           data: '{"integration": "zapier", "from": "${{ inputs.from_version }}", "to": "${{ inputs.to_version }}"}'
