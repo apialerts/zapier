@@ -1,0 +1,54 @@
+name: Migrate
+
+on:
+  workflow_dispatch:
+    inputs:
+      from_version:
+        description: 'Version to migrate users from (e.g. 3.0.2)'
+        required: true
+      to_version:
+        description: 'Version to migrate users to (e.g. 3.0.3)'
+        required: true
+      percent:
+        description: 'Percent of users to migrate (1-100, blank for all). Use for gradual rollout.'
+        required: false
+
+jobs:
+  migrate:
+    name: Migrate on Zapier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Migrate
+        run: |
+          if [ -n "$PERCENT" ]; then
+            npx zapier-platform migrate "$FROM" "$TO" "$PERCENT"
+          else
+            npx zapier-platform migrate "$FROM" "$TO"
+          fi
+        env:
+          FROM: ${{ inputs.from_version }}
+          TO: ${{ inputs.to_version }}
+          PERCENT: ${{ inputs.percent }}
+          ZAPIER_DEPLOY_KEY: ${{ secrets.ZAPIER_DEPLOY_KEY }}
+
+  notify:
+    name: Send Migrate Alert
+    needs: migrate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: apialerts/notify-action@v2
+        with:
+          api_key: ${{ secrets.APIALERTS_API_KEY }}
+          event: ci.integration.migrate.zapier
+          channel: releases
+          title: 'Migrated'
+          message: 'Zapier - users migrated ${{ inputs.from_version }} to ${{ inputs.to_version }}'
+          tags: CI/CD,Zapier,Migrate
+          link: ${{ format('{0}/{1}', github.server_url, github.repository) }}
+          data: '{"integration": "zapier", "from": "${{ inputs.from_version }}", "to": "${{ inputs.to_version }}"}'

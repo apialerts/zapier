@@ -1,5 +1,5 @@
 {
-  "name": "api-alerts",
+  "name": "apialerts-zapier",
   "version": "3.0.3",
   "description": "API Alerts is a notification platform that instantly notifies your team whenever significant events occur in your projects.",
   "main": "index.js",
