@@ -1,0 +1,41 @@
+name: Promote
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to promote to live (e.g. 3.0.3)'
+        required: true
+
+jobs:
+  promote:
+    name: Promote on Zapier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Promote
+        run: npx zapier-platform promote "$VERSION"
+        env:
+          VERSION: ${{ inputs.version }}
+          ZAPIER_DEPLOY_KEY: ${{ secrets.ZAPIER_DEPLOY_KEY }}
+
+  notify:
+    name: Send Promote Alert
+    needs: promote
+    runs-on: ubuntu-latest
+    steps:
+      - uses: apialerts/notify-action@v2
+        with:
+          api_key: ${{ secrets.APIALERTS_API_KEY }}
+          event: ci.integration.promote.zapier
+          channel: releases
+          title: 'Promoted'
+          message: 'Zapier - ${{ inputs.version }} Published'
+          tags: CI/CD,Zapier,Promote
+          link: ${{ format('{0}/{1}', github.server_url, github.repository) }}
+          data: '{"integration": "zapier", "version": "${{ inputs.version }}"}'

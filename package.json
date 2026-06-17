@@ -1,0 +1,21 @@
+{
+  "name": "apialerts-zapier",
+  "version": "3.0.3",
+  "description": "API Alerts is a notification platform that instantly notifies your team whenever significant events occur in your projects.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --testTimeout 10000"
+  },
+  "engines": {
+    "node": ">=v22",
+    "npm": ">=5.6.0"
+  },
+  "dependencies": {
+    "zapier-platform-core": "19.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.6.0",
+    "zapier-platform-cli": "^19.0.0"
+  },
+  "private": true
+}
