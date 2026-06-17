@@ -27,6 +27,8 @@ jobs:
           api_key: ${{ secrets.APIALERTS_API_KEY }}
           event: ci.integration.build.zapier
           channel: developer
-          message: 'zapier - PR build success'
+          title: 'Build Passed'
+          message: 'Zapier - PR build success'
           tags: CI/CD,Zapier,Build
           link: ${{ format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
+          data: '{"integration": "zapier"}'

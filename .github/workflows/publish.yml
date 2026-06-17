@@ -61,6 +61,8 @@ jobs:
           api_key: ${{ secrets.APIALERTS_API_KEY }}
           event: ci.integration.publish.zapier
           channel: releases
-          message: 'zapier ${{ github.ref_name }} pushed to Zapier'
+          title: 'Published'
+          message: 'Zapier ${{ github.ref_name }} pushed to Zapier'
           tags: CI/CD,Zapier,Publish
           link: ${{ format('{0}/{1}/releases/tag/{2}', github.server_url, github.repository, github.ref_name) }}
+          data: '{"integration": "zapier", "version": "${{ github.ref_name }}"}'
