@@ -11,12 +11,12 @@ Zapier Platform CLI app providing OAuth2 authentication, two triggers and one cr
 - `index.js` - app manifest (triggers, creates, auth, request template with bearer header)
 - `authentication.js` - OAuth2 config (authorize, token, refresh)
 - `constants.js` - base URLs and version
-- `triggers/new_event.js` - fires when a matching event arrives in your workspace
+- `triggers/new_event.js` - fires when a matching event arrives in your workspace (optional channel and event-pattern filters)
 - `triggers/channel_list.js` - dynamic dropdown of your workspace's channels
 - `creates/send_event.js` - posts an event into API Alerts
 - `test/` - Jest tests using mocked `z.request`
 
-Built on `zapier-platform-core` 18.x, Node `>=22`.
+Built on `zapier-platform-core` 19.x, Node `>=22`.
 
 ## Contributing
 
@@ -36,3 +36,7 @@ npm test
 ```
 
 That's enough to validate code changes. The tests mock `z.request`, so no API credentials or OAuth setup is needed.
+
+## Releases
+
+Releases are deployed by GitHub Actions: creating a GitHub release pushes the integration to Zapier, and the **Promote** / **Migrate** workflows (run from the Actions tab) take a version live and move existing users. See [RELEASES.md](./RELEASES.md) for the full flow.
