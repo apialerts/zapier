@@ -19,7 +19,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Promote
-        run: npx zapier-platform promote "$VERSION"
+        run: npx zapier-platform promote --yes "$VERSION"
         env:
           VERSION: ${{ inputs.version }}
           ZAPIER_DEPLOY_KEY: ${{ secrets.ZAPIER_DEPLOY_KEY }}

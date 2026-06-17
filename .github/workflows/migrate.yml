@@ -27,9 +27,9 @@ jobs:
       - name: Migrate
         run: |
           if [ -n "$PERCENT" ]; then
-            npx zapier-platform migrate "$FROM" "$TO" "$PERCENT"
+            npx zapier-platform migrate --yes "$FROM" "$TO" "$PERCENT"
           else
-            npx zapier-platform migrate "$FROM" "$TO"
+            npx zapier-platform migrate --yes "$FROM" "$TO"
           fi
         env:
           FROM: ${{ inputs.from_version }}
